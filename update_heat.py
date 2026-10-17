@@ -98,9 +98,12 @@ def main():
         ST[k] = [hi, fd(v.index(hi)), lo, fd(v.index(lo))]
     # 重写 index.html
     h = open(os.path.join(BASE, "index.html"), encoding="utf-8").read()
-    h = re.sub(r"var P = \{.*?\}, ST = ", lambda m: m.group(0), h, count=1, flags=re.S)
-    a = h.find("var P = "); b = h.find(";", h.find("var META"))
-    h = h[:a] + "var P = " + json.dumps(P, separators=(",", ":")) + ", ST = " + json.dumps(ST, ensure_ascii=False) + h[b:]
+    new_head = ("var P = " + json.dumps(P, separators=(",", ":")) + ", ST = "
+                + json.dumps(ST, ensure_ascii=False) + ";\nvar META")
+    h2 = re.sub(r"var P = .*?;\s*var META", lambda m: new_head, h, count=1, flags=re.S)
+    if h2 == h:
+        print("警告：index.html 结构未匹配，未更新"); return
+    h = h2
     h = re.sub(r"截至 \d{4}-\d{2}-\d{2}", "截至 " + max(max(avg_rows), max(amt_rows), today), h)
     open(os.path.join(BASE, "index.html"), "w", encoding="utf-8").write(h)
     print("更新完成:", {k: v["val"][-1] for k, v in P.items()})
